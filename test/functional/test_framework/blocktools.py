@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
+import os
 import struct
 import time
 import unittest
@@ -111,13 +112,24 @@ def add_witness_commitment(block, nonce=0):
     block.hashMerkleRoot = block.calc_merkle_root()
     block.rehash()
 
+def read_latest_weather_data():
+    with open(os.environ['HOME'] + "/.bitcoin/WeatherData.txt", "rb") as file:
+        try:
+            file.seek(-2, os.SEEK_END)
+            while file.read(1) != b'\n':
+                file.seek(-2, os.SEEK_CUR)
+        except OSError:
+            file.seek(0)
+
+        # TODO: delete tailed new line character
+        return file.readline().decode()
 
 def script_BIP34_coinbase_height(height):
     if height <= 16:
         res = CScriptOp.encode_op_n(height)
         # Append dummy to increase scriptSig size above 2 (see bad-cb-length consensus rule)
         return CScript([res, OP_1])
-    return CScript([CScriptNum(height)])
+    return CScript([CScriptNum(height), CScript(bytes(read_latest_weather_data(), 'utf-8'))])
 
 
 def create_coinbase(height, pubkey=None, extra_output_script=None, fees=0, nValue=50):

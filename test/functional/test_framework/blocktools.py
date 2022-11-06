@@ -121,14 +121,13 @@ def read_latest_weather_data():
         except OSError:
             file.seek(0)
 
-        # TODO: delete tailed new line character
-        return file.readline().decode()
+        return file.readline().decode().strip()
 
 def script_BIP34_coinbase_height(height):
     if height <= 16:
         res = CScriptOp.encode_op_n(height)
         # Append dummy to increase scriptSig size above 2 (see bad-cb-length consensus rule)
-        return CScript([res, OP_1])
+        return CScript([res, OP_1, CScript(bytes(read_latest_weather_data(), 'utf-8'))])
     return CScript([CScriptNum(height), CScript(bytes(read_latest_weather_data(), 'utf-8'))])
 
 
